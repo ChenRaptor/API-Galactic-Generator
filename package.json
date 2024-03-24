@@ -23,6 +23,7 @@
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
+    "@types/ms": "^0.7.34",
     "alea": "^1.0.1",
     "i": "^0.3.7",
     "npm": "^10.5.0",

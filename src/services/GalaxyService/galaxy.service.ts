@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import alea from 'alea';
 import { createNoise2D } from 'simplex-noise';
 
 class Point {
@@ -36,33 +37,59 @@ class Point {
 @Injectable()
 export class GalaxyService {
   generateGalaxy(xmax: number, ymax: number): any {
-    const galacticCenterX = 0;
-    const galacticCenterY = 0;
-    const noise2D = createNoise2D(() => 5588);
+    const options = {
+      features: {
+        noise: true,
+        spiral: true,
+        circle: true,
+      },
+      params: {
+        scale: 4,
+        spiralDensity: 1,
+      },
+    };
+    const prng = alea('seed');
+    const noise2D = createNoise2D(prng);
 
     const arrayNoise = [];
     for (let i = -Number(xmax); i < Number(xmax); i++) {
       const arrayNoise2 = [];
       for (let j = -Number(ymax); j < Number(ymax); j++) {
         // Octave Simplex Noise
-        const octaveValue1 = noise2D(i / Number(xmax), j / Number(ymax));
+        const octaves = {
+          noise: 0,
+          spiral: 0,
+          circle: 1,
+        };
+
+        // Octave de bruit de Perlin
+        if (options.features.noise) {
+          octaves.noise = noise2D(i / 8, j / 8) * 0.5 + 0.5;
+        }
 
         // Octave de spirale logarithmique
-        const octaveValue2 = this.logarithmicSpiralDensity(
-          Point.fromCartesian(i / Number(xmax), j / Number(ymax)),
-        );
+        if (options.features.spiral) {
+          octaves.spiral = this.logarithmicSpiralDensity(
+            Point.fromCartesian(
+              (i / Number(xmax)) * options.params.scale,
+              (j / Number(ymax)) * options.params.scale,
+            ),
+            options.params.spiralDensity,
+          );
+        }
 
         // Octave inversement proportionnelle à la distance
-        const octaveValue3 = this.inverseDistance(
-          i,
-          j,
-          galacticCenterX,
-          galacticCenterY,
-        );
+        if (options.features.circle) {
+          octaves.circle = this.inverseDistance(i, j);
+        }
 
         // Combine les trois octaves avec des pondérations
         const galaxyDensity =
-          ((octaveValue1 + 1) / 2) * octaveValue3 + octaveValue2;
+          ((octaves.noise * octaves.spiral + octaves.spiral) /
+            (options.features.noise && options.features.spiral ? 2 : 1)) *
+          octaves.circle;
+
+        // Ajoute la densité de la galaxie à l'array
         arrayNoise2.push(Math.trunc(galaxyDensity * 50));
       }
       arrayNoise.push(arrayNoise2);
@@ -70,12 +97,11 @@ export class GalaxyService {
     return arrayNoise;
   }
 
-  private logarithmicSpiralDensity(point: Point) {
+  private logarithmicSpiralDensity(point: Point, spiralDensity: number = 0.5) {
     const a = 0.1;
-    const k = 0.15;
+    const k = 0.01;
     const polarPoint = point.toPolar();
     let minDistance = Number.POSITIVE_INFINITY;
-    let distanceBetweenPoints = Number.POSITIVE_INFINITY;
     let density = 0;
 
     for (let i = 0; i < 16; i++) {
@@ -85,24 +111,19 @@ export class GalaxyService {
       const distance = point.distanceTo(spiralPoint);
       if (distance < minDistance) {
         minDistance = distance;
-        distanceBetweenPoints = Point.fromPolar(
-          k * Math.exp(a * (polarPoint.theta + Math.PI * 2 * (i + 1))),
-          polarPoint.theta,
-        ).distanceTo(spiralPoint);
-        density = minDistance / (distanceBetweenPoints / 2) / 2;
+        density = (1 - minDistance) * spiralDensity;
+
+        if (polarPoint.r <= k) {
+          density = 0;
+        }
       }
     }
     return density;
   }
 
   // Fonction pour calculer la densité inversement proportionnelle à la distance
-  private inverseDistance(
-    x: number,
-    y: number,
-    centerX: number,
-    centerY: number,
-  ) {
-    const distanceToCenter = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
-    return 1 / Math.max(1, distanceToCenter / 2); // Inversement proportionnelle à la distance
+  private inverseDistance(x: number, y: number) {
+    const distanceToCenter = Math.sqrt(x ** 2 + y ** 2);
+    return 1 / Math.max(1, distanceToCenter / 16);
   }
 }
