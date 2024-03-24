@@ -36,6 +36,11 @@ export class GalaxyController {
     return this.galaxyService.generateGalaxy(
       Number(request.query.xmax),
       Number(request.query.ymax),
+      {
+        scale: 20,
+        spiralDensity: 1,
+        seed: '1',
+      },
     );
   }
 }
