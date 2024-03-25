@@ -13,13 +13,13 @@ interface StarProbasInterface {
 }
 
 const starProbas = {
-  O: 0.5,
-  B: 0.1,
-  A: 0.1,
-  F: 0.1,
-  G: 0.05,
-  K: 0.05,
-  M: 0.05,
+  O: 0.00003,
+  B: 0.0013,
+  A: 0.006,
+  F: 0.03,
+  G: 0.076,
+  K: 0.121,
+  M: 0.7645,
 } as StarProbasInterface;
 
 type StarType = 'O' | 'B' | 'A' | 'F' | 'G' | 'K' | 'M';
@@ -38,11 +38,10 @@ const massRanges: MassRanges = {
   M: [0.08, 0.8],
 };
 
-// const COEFICENTS_RADIUS = 0.945;
 const MASS_SOL = 1.989 * 10 ** 30;
 const RADIUS_SOL = 6.963 * 10 ** 8;
+const LUMINOSITY_SOL = 3.839 * 10 ** 26;
 const CONSTANT_STEFAN_BOLTZMANN = 5.67 * 10 ** -8;
-const COEFFICIENT_MASS_LUMINOSITY = 5180;
 
 export class Star {
   constructor(
@@ -55,10 +54,10 @@ export class Star {
   ) {
     this.name = name;
     this.type = type;
-    this.mass = mass;
-    this.radius = radius;
-    this.temperature = temperature;
-    this.luminosity = luminosity;
+    this.mass = Number(mass.toPrecision(3));
+    this.radius = Math.trunc(radius);
+    this.temperature = Math.trunc(temperature);
+    this.luminosity = Number(luminosity.toPrecision(3));
   }
 
   private static calculateType(prob: number): StarType {
@@ -78,9 +77,9 @@ export class Star {
     starType: StarType,
     value: number,
   ): number | null {
-    const range = massRanges[starType]; // Récupère la plage de masse associée au type d'étoile
+    const range = massRanges[starType];
 
-    const [minMass, maxMass] = range; // Destructure la plage de masse en [minMass, maxMass]
+    const [minMass, maxMass] = range;
     const mass = minMass + (maxMass - minMass) * value;
 
     return mass * MASS_SOL;
@@ -95,7 +94,7 @@ export class Star {
   }
 
   private static calculateLuminosity(mass: number): number {
-    return mass / COEFFICIENT_MASS_LUMINOSITY;
+    return (mass / MASS_SOL) ** 3.5 * LUMINOSITY_SOL;
   }
 
   private static calculateTemperature(
