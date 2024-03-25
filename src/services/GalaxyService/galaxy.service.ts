@@ -12,6 +12,7 @@ export class GalaxyService {
 
   generateGalaxy(xmax: number, ymax: number, params: GenerationOptions): any {
     const t0 = performance.now();
+    let systemCount = 0;
 
     // Initialisation de la seed pour le bruit de Perlin
     const noise2D = createNoise2D(alea(params.seed));
@@ -22,14 +23,20 @@ export class GalaxyService {
       const arrayNoise2: number[] = [];
       for (let j = -ymax; j < ymax; j++) {
         // Ajoute la densité de la galaxie à l'array
-        arrayNoise2.push(
-          Math.trunc(this.getValue2d(i, j, xmax, ymax, params, noise2D) * 50),
+        let density = Math.trunc(
+          this.getValue2d(i, j, xmax, ymax, params, noise2D) * 50,
         );
+        if (density > 8) {
+          systemCount++;
+          density = 100;
+        } else density = 0;
+        arrayNoise2.push(density);
       }
       arrayNoise.push(arrayNoise2);
     }
     const t1 = performance.now();
     console.log(`This galaxy is generated in ${t1 - t0} milliseconds.`);
+    console.log(`This galaxy has ${systemCount} systems.`);
     return arrayNoise;
   }
 
@@ -71,10 +78,10 @@ export class GalaxyService {
 
     // Combine les trois octaves avec des pondérations
     return (
-      ((octaves.noise * octaves.spiral + octaves.spiral) /
+      ((octaves.noise * octaves.spiral * 3 + octaves.spiral) /
         (this.FEATURE_OCTAVE_RANDOM_NOISE && this.FEATURE_OCTAVE_SPIRAL_PATTERN
-          ? 2
-          : 1)) *
+          ? 4
+          : 3)) *
       octaves.circle
     );
   }
@@ -84,7 +91,7 @@ export class GalaxyService {
     spiralDensity: number = 0.5,
     branch: number,
   ) {
-    const a = 0.1;
+    const a = 0.08;
     const k = 0.01;
     const polarPoint = point.toPolar();
     let minDistance = Number.POSITIVE_INFINITY;
@@ -104,8 +111,8 @@ export class GalaxyService {
         const distance = point.distanceTo(spiralPoint);
         if (distance < minDistance) {
           minDistance = distance;
-          if (density < (1 - minDistance) * spiralDensity) {
-            density = (1 - minDistance) * spiralDensity;
+          if (density < (2 - minDistance) * spiralDensity) {
+            density = (2 - minDistance) * spiralDensity;
           }
           if (polarPoint.r <= k) {
             density = 0;
@@ -119,6 +126,6 @@ export class GalaxyService {
   // Fonction pour calculer la densité inversement proportionnelle à la distance
   private inverseDistance(x: number, y: number) {
     const distanceToCenter = Math.hypot(x, y);
-    return 1 / Math.max(1, distanceToCenter / 16);
+    return 1 / Math.max(1, distanceToCenter ** 0.52);
   }
 }

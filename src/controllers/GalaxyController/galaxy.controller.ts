@@ -38,9 +38,9 @@ export class GalaxyController {
       Number(request.query.ymax),
       {
         scale: 5,
-        spiralDensity: 1,
+        spiralDensity: 2,
         seed: '1',
-        branch: 3,
+        branch: 2,
       },
     );
   }

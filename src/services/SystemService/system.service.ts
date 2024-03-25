@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { Star } from 'src/class/Star';
 
 @Injectable()
 export class SystemService {
-  getHello(): string {
-    return 'Hello World!';
+  getSystem(seed: string): object {
+    return Star.generate(seed);
   }
 }
