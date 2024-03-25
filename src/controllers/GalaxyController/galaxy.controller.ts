@@ -37,9 +37,10 @@ export class GalaxyController {
       Number(request.query.xmax),
       Number(request.query.ymax),
       {
-        scale: 20,
+        scale: 5,
         spiralDensity: 1,
         seed: '1',
+        branch: 3,
       },
     );
   }

@@ -11,6 +11,8 @@ export class GalaxyService {
   FEATURE_OCTAVE_CIRCULAR_PATTERN = true;
 
   generateGalaxy(xmax: number, ymax: number, params: GenerationOptions): any {
+    const t0 = performance.now();
+
     // Initialisation de la seed pour le bruit de Perlin
     const noise2D = createNoise2D(alea(params.seed));
 
@@ -26,6 +28,8 @@ export class GalaxyService {
       }
       arrayNoise.push(arrayNoise2);
     }
+    const t1 = performance.now();
+    console.log(`This galaxy is generated in ${t1 - t0} milliseconds.`);
     return arrayNoise;
   }
 
@@ -56,6 +60,7 @@ export class GalaxyService {
           (y / ymax) * params.scale,
         ),
         params.spiralDensity,
+        params.branch,
       );
     }
 
@@ -74,24 +79,37 @@ export class GalaxyService {
     );
   }
 
-  private logarithmicSpiralDensity(point: Point, spiralDensity: number = 0.5) {
+  private logarithmicSpiralDensity(
+    point: Point,
+    spiralDensity: number = 0.5,
+    branch: number,
+  ) {
     const a = 0.1;
     const k = 0.01;
     const polarPoint = point.toPolar();
     let minDistance = Number.POSITIVE_INFINITY;
     let density = 0;
 
+    const thetaGapBranch = (Math.PI * 2) / branch;
+
     for (let i = 0; i < 16; i++) {
       const thetaOffset = Math.PI * 2 * i;
-      const r = k * Math.exp(a * (polarPoint.theta + thetaOffset));
-      const spiralPoint = Point.fromPolar(r, polarPoint.theta);
-      const distance = point.distanceTo(spiralPoint);
-      if (distance < minDistance) {
-        minDistance = distance;
-        density = (1 - minDistance) * spiralDensity;
-
-        if (polarPoint.r <= k) {
-          density = 0;
+      for (let numBranch = 0; numBranch < branch; numBranch++) {
+        const r =
+          k *
+          Math.exp(
+            a * (polarPoint.theta + thetaOffset + thetaGapBranch * numBranch),
+          );
+        const spiralPoint = Point.fromPolar(r, polarPoint.theta);
+        const distance = point.distanceTo(spiralPoint);
+        if (distance < minDistance) {
+          minDistance = distance;
+          if (density < (1 - minDistance) * spiralDensity) {
+            density = (1 - minDistance) * spiralDensity;
+          }
+          if (polarPoint.r <= k) {
+            density = 0;
+          }
         }
       }
     }
