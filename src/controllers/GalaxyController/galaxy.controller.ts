@@ -33,15 +33,11 @@ export class GalaxyController {
 
   @Get('/generate')
   getGenerateGalaxy(@Req() request: Request): any {
-    return this.galaxyService.generateGalaxy(
-      Number(request.query.xmax),
-      Number(request.query.ymax),
-      {
-        scale: 5,
-        spiralDensity: 2,
-        seed: '1',
-        branch: 2,
-      },
-    );
+    return this.galaxyService.generateGalaxy(Number(request.query.xmax), Number(request.query.ymax), {
+      scale: 5,
+      spiralDensity: 2,
+      seed: '1',
+      branch: 2,
+    });
   }
 }

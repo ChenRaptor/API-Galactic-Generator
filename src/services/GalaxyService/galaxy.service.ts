@@ -23,9 +23,7 @@ export class GalaxyService {
       const arrayNoise2: number[] = [];
       for (let j = -ymax; j < ymax; j++) {
         // Ajoute la densité de la galaxie à l'array
-        let density = Math.trunc(
-          this.getValue2d(i, j, xmax, ymax, params, noise2D) * 50,
-        );
+        let density = Math.trunc(this.getValue2d(i, j, xmax, ymax, params, noise2D) * 50);
         if (density > 8) {
           systemCount++;
           density = 100;
@@ -40,14 +38,7 @@ export class GalaxyService {
     return arrayNoise;
   }
 
-  private getValue2d(
-    x: number,
-    y: number,
-    xmax: number,
-    ymax: number,
-    params: any,
-    noise2D: NoiseFunction2D,
-  ) {
+  private getValue2d(x: number, y: number, xmax: number, ymax: number, params: any, noise2D: NoiseFunction2D) {
     const octaves = {
       noise: 0,
       spiral: 0,
@@ -61,14 +52,7 @@ export class GalaxyService {
 
     // Octave de spirale logarithmique
     if (this.FEATURE_OCTAVE_SPIRAL_PATTERN) {
-      octaves.spiral = this.logarithmicSpiralDensity(
-        Point.fromCartesian(
-          (x / xmax) * params.scale,
-          (y / ymax) * params.scale,
-        ),
-        params.spiralDensity,
-        params.branch,
-      );
+      octaves.spiral = this.logarithmicSpiralDensity(Point.fromCartesian((x / xmax) * params.scale, (y / ymax) * params.scale), params.spiralDensity, params.branch);
     }
 
     // Octave inversement proportionnelle à la distance
@@ -77,20 +61,10 @@ export class GalaxyService {
     }
 
     // Combine les trois octaves avec des pondérations
-    return (
-      ((octaves.noise * octaves.spiral * 3 + octaves.spiral) /
-        (this.FEATURE_OCTAVE_RANDOM_NOISE && this.FEATURE_OCTAVE_SPIRAL_PATTERN
-          ? 4
-          : 3)) *
-      octaves.circle
-    );
+    return ((octaves.noise * octaves.spiral * 3 + octaves.spiral) / (this.FEATURE_OCTAVE_RANDOM_NOISE && this.FEATURE_OCTAVE_SPIRAL_PATTERN ? 4 : 3)) * octaves.circle;
   }
 
-  private logarithmicSpiralDensity(
-    point: Point,
-    spiralDensity: number = 0.5,
-    branch: number,
-  ) {
+  private logarithmicSpiralDensity(point: Point, spiralDensity: number = 0.5, branch: number) {
     const a = 0.08;
     const k = 0.01;
     const polarPoint = point.toPolar();
@@ -102,11 +76,7 @@ export class GalaxyService {
     for (let i = 0; i < 16; i++) {
       const thetaOffset = Math.PI * 2 * i;
       for (let numBranch = 0; numBranch < branch; numBranch++) {
-        const r =
-          k *
-          Math.exp(
-            a * (polarPoint.theta + thetaOffset + thetaGapBranch * numBranch),
-          );
+        const r = k * Math.exp(a * (polarPoint.theta + thetaOffset + thetaGapBranch * numBranch));
         const spiralPoint = Point.fromPolar(r, polarPoint.theta);
         const distance = point.distanceTo(spiralPoint);
         if (distance < minDistance) {
